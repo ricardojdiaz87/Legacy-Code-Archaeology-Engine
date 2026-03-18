@@ -1,0 +1,9 @@
+﻿# AI & LLM Integration
+google-generativeai
+
+# Environment & Configuration
+python-dotenv
+
+# Data & Security (Future-proofing)
+pydantic
+rich
