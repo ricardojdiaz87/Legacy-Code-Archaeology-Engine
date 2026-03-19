@@ -3,63 +3,82 @@ import google.generativeai as genai
 from dotenv import load_dotenv
 from rich.console import Console
 
-# Initialize professional console for styled terminal output
+# Professional terminal output handler
 console = Console()
 
 class CodeArchaeologist:
     """
-    Main analysis engine for the Legacy Code Archaeology Engine.
-    Handles secure AI connectivity, system instructions, and technical debt mapping.
+    Main Analysis Engine for the Legacy Code Archaeology Project.
+    Uses Google Gemini 2.5 Flash to perform deep static analysis on source code.
     """
     
     def __init__(self):
-        """Initialize environment variables and model configuration."""
+        """Initializes environment, API configuration, and model selection."""
         load_dotenv()
         self.api_key = os.getenv("GOOGLE_API_KEY")
-        self.model_name = "gemini-1.5-pro"  # Selected for its massive context window
+        
+        # Selected from your authorized list: High-speed, high-reasoning model
+        self.model_name = "models/gemini-2.5-flash" 
         self._setup_connection()
 
     def _setup_connection(self):
         """
-        Private: Configures authentication with Google AI Studio (Vertex AI compatible).
+        Private: Configures the Gemini SDK and initializes the Generative Model.
         Raises:
-            ValueError: If GOOGLE_API_KEY is not found in the environment.
+            ValueError: If the API Key is missing from the .env file.
         """
         if not self.api_key:
-            console.print("[bold red]❌ Error:[/bold red] GOOGLE_API_KEY not detected in .env file")
-            raise ValueError("Missing API Key. Please check your .env configuration.")
+            console.print("[bold red]❌ Error:[/bold red] GOOGLE_API_KEY not found in .env")
+            raise ValueError("Missing API Key. Ensure your .env file is correctly configured.")
         
-        # Authenticate the SDK
+        # Authenticate with Google AI Studio
         genai.configure(api_key=self.api_key)
         
-        # Define the System Instruction to lock the AI into a Professional Architect persona
+        # Initialize model with persistent system instructions
         self.model = genai.GenerativeModel(
             model_name=self.model_name,
             system_instruction=(
                 "You are a Senior Software Archaeologist and Architect. "
-                "Your mission is to perform deep static analysis on legacy systems. "
-                "Identify technical debt, security vulnerabilities (PII/Secrets), "
-                "and obsolete architectural patterns. Always prioritize remediation "
-                "steps and provide a Complexity Score (1-10)."
+                "Analyze legacy code for technical debt, security risks, and obsolete patterns. "
+                "Always provide a 'Refactoring Roadmap' and a Complexity Score (1-10)."
             )
         )
 
-    def test_connection(self):
+    def list_available_models(self):
         """
-        Verifies if the engine can successfully communicate with the LLM.
+        Diagnostic Tool: Scans and lists all models authorized for this API Key.
+        Useful for debugging 404/Connectivity issues.
+        """
+        console.print("\n[bold blue]🔍 Scanning Authorized Models...[/bold blue]")
+        try:
+            for m in genai.list_models():
+                if 'generateContent' in m.supported_generation_methods:
+                    console.print(f"  • [green]Authorized:[/green] {m.name}")
+        except Exception as e:
+            console.print(f"[bold red]❌ Diagnostic Failed:[/bold red] {e}")
+
+    def analyze_code(self, sanitized_code: str):
+        """
+        Sends the scrubbed code to the AI engine for expert review.
         Returns:
-            bool: True if connection is established, False otherwise.
+            str: The AI-generated archaeology report.
         """
         try:
-            # Low-token pulse to verify heartbeat
-            response = self.model.generate_content("Archaeology Engine: Heartbeat check.")
-            console.print(f"[bold green]✔ Engine Online:[/bold green] {self.model_name} responded successfully.")
-            return True
+            # We wrap the code in a structured prompt to ensure quality output
+            prompt = (
+                "Perform a deep archaeological excavation on the following code snippet. "
+                "Identify hidden risks and propose modern alternatives.\n\n"
+                f"CODE TO ANALYZE:\n{sanitized_code}"
+            )
+            
+            response = self.model.generate_content(prompt)
+            return response.text
         except Exception as e:
-            console.print(f"[bold red]❌ Connection Failed:[/bold red] {str(e)}")
-            return False
+            console.print(f"[bold red]❌ Analysis Engine Error:[/bold red] {e}")
+            return None
 
 if __name__ == "__main__":
-    # Local execution for connectivity testing
+    # Local Test & Diagnostic
     engine = CodeArchaeologist()
-    engine.test_connection()
+    console.print(f"[bold green]✔ Engine Initialized:[/bold green] Using {engine.model_name}")
+    engine.list_available_models()

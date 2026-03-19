@@ -62,5 +62,6 @@ def run_archaeology_session(file_path: str):
 
 if __name__ == "__main__":
     # Point this to the file you want to analyze
-    target = "src/core/analyzer.py" 
+    #target = "src/core/analyzer.py" 
+    target = "legacy_sample.py" 
     run_archaeology_session(target)
