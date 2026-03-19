@@ -1,5 +1,12 @@
 [
     {
+        "file": "legacy_memcache.py",
+        "status": "RESTORED",
+        "impact_score": 22.5,
+        "engine_version": "1.0.0-hardened",
+        "security_scan": "PASSED (Local Scrubbing)"
+    },
+    {
         "file": "legacy_sample.py",
         "status": "RESTORED",
         "impact_score": 22.5,

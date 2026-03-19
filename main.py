@@ -6,6 +6,7 @@ import logging
 # =================================================================
 # 1. ENFORCED PATH RESOLUTION (Senior Architecture)
 # =================================================================
+# Resolvemos rutas para que funcione en Windows Venv y Fedora Linux
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 SRC_DIR = os.path.join(BASE_DIR, 'src')
 
@@ -28,7 +29,7 @@ except ImportError:
         from utils.reporter import AuditReporter
     except ImportError as e:
         print(f"❌ CRITICAL STRUCTURAL ERROR: {e}")
-        print("💡 Checklist: Ensure src/utils/reporter.py exists and has the AuditReporter class.")
+        print("💡 Checklist: Ensure src/utils/reporter.py and other modules exist.")
         sys.exit(1)
 
 # Professional logging configuration
@@ -44,7 +45,7 @@ logging.basicConfig(
 def run_pipeline():
     """
     Main Orchestrator:
-    Discovery -> Local Scrubbing -> AI Refactoring -> Shielded Restoration -> Reporting.
+    Discovery -> Local Scrubbing -> AI Refactoring (Mock) -> Restoration -> Reporting.
     """
     logging.info("🚀 Starting Legacy Code Restoration Pipeline...")
 
@@ -52,8 +53,9 @@ def run_pipeline():
     restorer = CodeRestorer(output_path="restored_project")
     pipeline_audit_data = [] 
     
-    # Discovery Phase
-    legacy_files = [f for f in os.listdir('.') if f.endswith('.py') and f != 'main.py' and f != 'generate_report.py']
+    # Discovery Phase: Detect .py files, ignore orchestrators and reports
+    ignored_files = ['main.py', 'generate_report.py']
+    legacy_files = [f for f in os.listdir('.') if f.endswith('.py') and f not in ignored_files]
     
     if not legacy_files:
         logging.warning("⚠️ No legacy files detected in the root directory.")
@@ -64,15 +66,18 @@ def run_pipeline():
 
         try:
             # STAGE 1: Security Scrubbing (Local Masking)
+            # We only READ the file, we don't execute it (Safe for Windows)
             scrubbed_content = PIIScrubber.scrub_file(file_path)
             logging.info(f"🛡️ Stage 1: Security Shield active for {file_path}")
             
-            # STAGE 2: AI Refactoring Simulation (Ready for Gemini API)
-            logging.info(f"🧠 Stage 2: Performing AI-Driven Refactoring for {file_path}")
+            # STAGE 2: AI Refactoring Simulation
+            # In Phase 2, this will be connected to Gemini API
+            logging.info(f"🧠 Stage 2: AI Analyzing legacy patterns in {file_path}")
             mock_ai_output = (
-                "def legacy_function_restored(data: list) -> bool:\n"
+                "import typing\n\n"
+                "def restored_logic(data: list) -> dict:\n"
                 "    \"\"\"Refactored by Legacy Engine v1.0 - Clean & Typed.\"\"\"\n"
-                "    return all(item is not None for item in data)\n"
+                "    return {str(i): v for i, v in enumerate(data) if v is not None}\n"
             )
 
             # STAGE 3: Shielded Restoration & AST Syntax Validation
@@ -93,15 +98,15 @@ def run_pipeline():
     # 4. FINAL REPORTING (The Business Layer)
     # =================================================================
     try:
-        # 1. Save JSON (Raw Data for systems)
+        # Save JSON (Technical Data)
         with open("audit_report.json", "w", encoding="utf-8") as f:
             json.dump(pipeline_audit_data, f, indent=4)
         
-        # 2. Generate Markdown (Professional Summary for humans)
+        # Generate Markdown (Executive Report)
         if AuditReporter.generate_markdown(pipeline_audit_data):
             logging.info("📝 Executive Markdown report generated: FINAL_AUDIT_REPORT.md")
             
-        logging.info("🏁 Pipeline finished successfully. Check /restored_project and FINAL_AUDIT_REPORT.md")
+        logging.info("🏁 Pipeline finished successfully. Check /restored_project")
     except Exception as e:
         logging.error(f"❌ Failed to generate final reports: {e}")
 
