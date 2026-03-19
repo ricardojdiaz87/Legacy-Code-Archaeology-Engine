@@ -4,13 +4,13 @@
         "status": "RESTORED",
         "impact_score": 22.5,
         "engine_version": "1.0.0-hardened",
-        "security_scan": "PASSED"
+        "security_scan": "PASSED (Local Scrubbing)"
     },
     {
         "file": "old_script.py",
         "status": "RESTORED",
         "impact_score": 22.5,
         "engine_version": "1.0.0-hardened",
-        "security_scan": "PASSED"
+        "security_scan": "PASSED (Local Scrubbing)"
     }
 ]
