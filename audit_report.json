@@ -2,22 +2,33 @@
     {
         "file": "legacy_memcache.py",
         "status": "RESTORED",
-        "impact_score": 22.5,
-        "engine_version": "1.0.0-hardened",
-        "security_scan": "PASSED (Local Scrubbing)"
+        "impact_score": 15.0,
+        "engine_version": "1.3.1-universal",
+        "language": ".PY",
+        "security_scan": "PASSED (Polyglot Scrubbing)"
     },
     {
         "file": "legacy_sample.py",
         "status": "RESTORED",
-        "impact_score": 22.5,
-        "engine_version": "1.0.0-hardened",
-        "security_scan": "PASSED (Local Scrubbing)"
+        "impact_score": 15.0,
+        "engine_version": "1.3.1-universal",
+        "language": ".PY",
+        "security_scan": "PASSED (Polyglot Scrubbing)"
+    },
+    {
+        "file": "legacy_tencent_http.php",
+        "status": "RESTORED",
+        "impact_score": 15.0,
+        "engine_version": "1.3.1-universal",
+        "language": ".PHP",
+        "security_scan": "PASSED (Polyglot Scrubbing)"
     },
     {
         "file": "old_script.py",
         "status": "RESTORED",
-        "impact_score": 22.5,
-        "engine_version": "1.0.0-hardened",
-        "security_scan": "PASSED (Local Scrubbing)"
+        "impact_score": 15.0,
+        "engine_version": "1.3.1-universal",
+        "language": ".PY",
+        "security_scan": "PASSED (Polyglot Scrubbing)"
     }
 ]

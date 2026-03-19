@@ -6,7 +6,6 @@ import logging
 # =================================================================
 # 1. ENFORCED PATH RESOLUTION (Senior Architecture)
 # =================================================================
-# Resolvemos rutas para que funcione en Windows Venv y Fedora Linux
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 SRC_DIR = os.path.join(BASE_DIR, 'src')
 
@@ -16,7 +15,7 @@ if SRC_DIR not in sys.path:
     sys.path.insert(0, SRC_DIR)
 
 # =================================================================
-# 2. FAIL-SAFE IMPORTS
+# 2. FAIL-SAFE MODULE IMPORTS
 # =================================================================
 try:
     from src.services.restorer import CodeRestorer
@@ -29,7 +28,6 @@ except ImportError:
         from utils.reporter import AuditReporter
     except ImportError as e:
         print(f"❌ CRITICAL STRUCTURAL ERROR: {e}")
-        print("💡 Checklist: Ensure src/utils/reporter.py and other modules exist.")
         sys.exit(1)
 
 # Professional logging configuration
@@ -40,75 +38,95 @@ logging.basicConfig(
 )
 
 # =================================================================
-# 3. PIPELINE ORCHESTRATION
+# 3. UNIVERSAL CONFIGURATION
+# =================================================================
+# Definimos el alcance del motor: Soporte para el stack Web completo
+ALLOWED_EXTENSIONS = {
+    '.py', '.php', '.js', '.css', '.html', 
+    '.ajax', '.jquery', '.jsx', '.ts'
+}
+
+IGNORED_FILES = {
+    'main.py', 'generate_report.py', 'audit_report.json', 
+    'FINAL_AUDIT_REPORT.md', 'MANIFESTO.md'
+}
+
+# =================================================================
+# 4. PIPELINE ORCHESTRATION
 # =================================================================
 def run_pipeline():
     """
-    Main Orchestrator:
-    Discovery -> Local Scrubbing -> AI Refactoring (Mock) -> Restoration -> Reporting.
+    Orquestador Universal:
+    Detecta múltiples lenguajes -> Limpieza PII -> Refactorización Mock -> Reporte.
     """
-    logging.info("🚀 Starting Legacy Code Restoration Pipeline...")
+    logging.info("🚀 Starting Universal Legacy Archaeology Pipeline...")
 
-    # Initialize Core Services
     restorer = CodeRestorer(output_path="restored_project")
     pipeline_audit_data = [] 
     
-    # Discovery Phase: Detect .py files, ignore orchestrators and reports
-    ignored_files = ['main.py', 'generate_report.py']
-    legacy_files = [f for f in os.listdir('.') if f.endswith('.py') and f not in ignored_files]
+    # Discovery Phase: Escaneo multilingüe
+    all_files = os.listdir('.')
+    legacy_files = [
+        f for f in all_files 
+        if os.path.splitext(f)[1].lower() in ALLOWED_EXTENSIONS 
+        and f not in IGNORED_FILES
+    ]
     
     if not legacy_files:
-        logging.warning("⚠️ No legacy files detected in the root directory.")
+        logging.warning("⚠️ No legacy specimens (.py, .js, .php, etc.) detected in root.")
         return
 
+    logging.info(f"🔍 Found {len(legacy_files)} targets for restoration.")
+
     for file_path in legacy_files:
-        logging.info(f"📂 Processing Target: {file_path}")
+        ext = os.path.splitext(file_path)[1].lower()
+        logging.info(f"📂 Processing [{ext.upper()}]: {file_path}")
 
         try:
-            # STAGE 1: Security Scrubbing (Local Masking)
-            # We only READ the file, we don't execute it (Safe for Windows)
+            # STAGE 1: Security Scrubbing (Universal Text Masking)
+            # Funciona para cualquier lenguaje al ser análisis de texto plano
             scrubbed_content = PIIScrubber.scrub_file(file_path)
             logging.info(f"🛡️ Stage 1: Security Shield active for {file_path}")
             
-            # STAGE 2: AI Refactoring Simulation
-            # In Phase 2, this will be connected to Gemini API
-            logging.info(f"🧠 Stage 2: AI Analyzing legacy patterns in {file_path}")
+            # STAGE 2: AI Analysis Simulation
+            # En Fase 2, aquí inyectaremos prompts específicos por extensión
+            logging.info(f"🧠 Stage 2: AI Analyzing patterns in {file_path}")
             mock_ai_output = (
-                "import typing\n\n"
-                "def restored_logic(data: list) -> dict:\n"
-                "    \"\"\"Refactored by Legacy Engine v1.0 - Clean & Typed.\"\"\"\n"
-                "    return {str(i): v for i, v in enumerate(data) if v is not None}\n"
+                f"/* Refactored {ext.upper()} by Legacy Engine v1.3 */\n"
+                f"// Safety: PII Masked locally.\n"
+                f"console.log('Modernized logic for {file_path}');"
             )
 
-            # STAGE 3: Shielded Restoration & AST Syntax Validation
+            # STAGE 3: Shielded Restoration
+            # Nota: El validador AST actual es para Python. 
+            # En Fase 2 añadiremos validadores para JS y PHP.
             logging.info(f"🧱 Stage 3: Applying Validation Shield to {file_path}")
             success = restorer.save_restored_file(file_path, mock_ai_output)
 
             if success:
                 # STAGE 4: Audit Traceability
-                trace = restorer.generate_audit_report(file_path, changes_count=15)
-                trace["security_scan"] = "PASSED (Local Scrubbing)"
+                trace = restorer.generate_audit_report(file_path, changes_count=10)
+                trace["language"] = ext.upper()
+                trace["security_scan"] = "PASSED (Polyglot Scrubbing)"
                 pipeline_audit_data.append(trace)
                 logging.info(f"📊 Trace logged for {file_path}")
 
         except Exception as e:
-            logging.error(f"CRITICAL: Unexpected failure on {file_path}: {e}")
+            logging.error(f"❌ CRITICAL failure on {file_path}: {e}")
 
     # =================================================================
-    # 4. FINAL REPORTING (The Business Layer)
+    # 5. FINAL REPORTING
     # =================================================================
     try:
-        # Save JSON (Technical Data)
         with open("audit_report.json", "w", encoding="utf-8") as f:
             json.dump(pipeline_audit_data, f, indent=4)
         
-        # Generate Markdown (Executive Report)
         if AuditReporter.generate_markdown(pipeline_audit_data):
             logging.info("📝 Executive Markdown report generated: FINAL_AUDIT_REPORT.md")
             
-        logging.info("🏁 Pipeline finished successfully. Check /restored_project")
+        logging.info("🏁 Pipeline finished. Results in /restored_project")
     except Exception as e:
-        logging.error(f"❌ Failed to generate final reports: {e}")
+        logging.error(f"❌ Failed to finalize reports: {e}")
 
 if __name__ == "__main__":
     run_pipeline()

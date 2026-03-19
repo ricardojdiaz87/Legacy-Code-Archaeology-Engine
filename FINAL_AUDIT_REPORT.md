@@ -5,14 +5,15 @@
 
 | File Name | Status | Impact Score | Security Scan | Version |
 | :--- | :--- | :--- | :--- | :--- |
-| legacy_memcache.py | `RESTORED` | 22.5 | ✅ PASSED | 1.0.0-hardened |
-| legacy_sample.py | `RESTORED` | 22.5 | ✅ PASSED | 1.0.0-hardened |
-| old_script.py | `RESTORED` | 22.5 | ✅ PASSED | 1.0.0-hardened |
+| legacy_memcache.py | `RESTORED` | 15.0 | 🔍 PASSED | 1.3.1-universal |
+| legacy_sample.py | `RESTORED` | 15.0 | 🔍 PASSED | 1.3.1-universal |
+| legacy_tencent_http.php | `RESTORED` | 15.0 | 🔍 PASSED | 1.3.1-universal |
+| old_script.py | `RESTORED` | 15.0 | 🔍 PASSED | 1.3.1-universal |
 
 
 ### 📊 Project Insights
-* **Total Files Processed:** 3
-* **Accumulated Impact Score:** 67.5 points
+* **Total Files Processed:** 4
+* **Accumulated Impact Score:** 60.0 points
 
 ---
 *Report generated automatically by the Restoration Pipeline.*
