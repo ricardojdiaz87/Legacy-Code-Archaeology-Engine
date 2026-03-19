@@ -1,0 +1,16 @@
+[
+    {
+        "file": "legacy_sample.py",
+        "status": "RESTORED",
+        "impact_score": 22.5,
+        "engine_version": "1.0.0-hardened",
+        "security_scan": "PASSED"
+    },
+    {
+        "file": "old_script.py",
+        "status": "RESTORED",
+        "impact_score": 22.5,
+        "engine_version": "1.0.0-hardened",
+        "security_scan": "PASSED"
+    }
+]

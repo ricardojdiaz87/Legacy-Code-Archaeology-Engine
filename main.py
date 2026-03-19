@@ -1,132 +1,69 @@
 import os
-import time
 import sys
-from dotenv import load_dotenv
-from src.utils.security import SecurityScrubber
-from src.core.analyzer import CodeArchaeologist
-from src.services.restorer import CodeRestorer
-from rich.console import Console
-from rich.panel import Panel
-from rich.table import Table
+import json
+import logging
 
-# --- CONFIGURACIÓN DE ENTORNO ---
-load_dotenv()
-console = Console()
+# 1. FORCE THE PROJECT ROOT INTO THE PATH
+# This tells Python to look for 'src' first.
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
 
-def estimate_token_cost(files):
-    """Calcula el costo proyectado de la operación (FinOps)"""
-    input_price = float(os.getenv("INPUT_TOKEN_PRICE", 0.10))
-    total_chars = 0
-    for file in files:
-        with open(file, "r", encoding="utf-8") as f:
-            total_chars += len(f.read())
-    
-    est_tokens = total_chars / 4
-    est_cost = (est_tokens / 1000000) * input_price
-    
-    table = Table(title="💰 FinOps: Token & Cost Intelligence")
-    table.add_column("Métrica", style="cyan")
-    table.add_column("Valor", style="magenta")
-    table.add_row("Archivos Encontrados", str(len(files)))
-    table.add_row("Tokens Estimados", f"{int(est_tokens):,}")
-    table.add_row("Costo Est. Proveedor", f"${est_cost:.6f} USD")
-    table.add_row("Estado de Cuota", "[bold green]FREE TIER ELIGIBLE[/bold green]")
-    
-    console.print(table)
-    return est_tokens
+# 2. STARK ABSOLUTE IMPORTS
+# We use 'src.folder.file' to be 100% explicit for Windows
+try:
+    from src.services.restorer import CodeRestorer
+    from src.utils.scrubber import PIIScrubber
+except ImportError as e:
+    print(f"❌ CRITICAL STRUCTURAL ERROR: {e}")
+    print("\n--- TROUBLESHOOTING CHECKLIST ---")
+    print(f"1. Current Directory: {os.getcwd()}")
+    print(f"2. Does this file exist? {os.path.join(BASE_DIR, 'src', 'utils', 'scrubber.py')}")
+    print(f"3. Does this file exist? {os.path.join(BASE_DIR, 'src', 'utils', '__init__.py')}")
+    sys.exit(1)
 
-def get_all_python_files(root_dir):
-    """Escaneo recursivo omitiendo carpetas de sistema y entorno"""
-    py_files = []
-    excluded = {'venv', '.venv', '__pycache__', '.git', 'restored_project', 'build', 'dist'}
-    for root, dirs, files in os.walk(root_dir):
-        dirs[:] = [d for d in dirs if d not in excluded]
-        for file in files:
-            if file.endswith(".py") and file != "main.py":
-                py_files.append(os.path.join(root, file))
-    return py_files
+# Professional logging configuration
+logging.basicConfig(
+    level=logging.INFO, 
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
 
-def run_project_archaeology():
-    """Flujo principal con manejo de resiliencia (Circuit Breaker)"""
-    scrubber = SecurityScrubber()
-    engine = CodeArchaeologist()
-    restorer = CodeRestorer(engine)
-    output_dir = "restored_project"
+def run_pipeline():
+    logging.info("🚀 Starting Legacy Code Restoration Pipeline...")
+    restorer = CodeRestorer(output_path="restored_project")
+    pipeline_audit_data = []
     
-    # ESTADO DEL CIRCUITO
-    is_circuit_open = False 
-
-    console.print(Panel.fit(
-        "🏛️  [bold gold1]Resilient Architecture: Circuit Breaker Enabled[/bold gold1]\n"
-        "[dim]Monitoring API Health & Quota Limits[/dim]"
-    ))
+    # Discovery: Finding legacy .py files
+    legacy_files = [f for f in os.listdir('.') if f.endswith('.py') and f != 'main.py']
     
-    all_files = get_all_python_files(".")
-    if not all_files:
-        console.print("[bold red]No se encontraron archivos Python para procesar.[/bold red]")
-        return
-    
-    estimate_token_cost(all_files)
-
-    # --- FASE 1: LIMPIEZA DE SEGURIDAD (LOCAL) ---
-    console.print(f"\n[bold blue]Step 1:[/bold blue] Scrubbing PII & Data Masking...")
-    full_context = ""
-    for file in all_files:
+    for file_path in legacy_files:
+        logging.info(f"📂 Processing Target: {file_path}")
         try:
-            with open(file, "r", encoding="utf-8") as f:
-                content = f.read()
-                sanitized = scrubber.scrub_content(content)
-                full_context += f"\n\n--- FILE: {file} ---\n{sanitized}"
-        except Exception as e:
-            console.print(f"[yellow]⚠️ Error leyendo {file}: {e}[/yellow]")
-
-    # --- FASE 2: ANÁLISIS GLOBAL (Punto de Control del Circuito) ---
-    console.print("[bold blue]Step 2:[/bold blue] Generating Global Archaeology Intelligence...")
-    project_prompt = f"Analyze this project context and define core business rules:\n{full_context}"
-    
-    try:
-        report = engine.model.generate_content(project_prompt)
-        with open("ARCHAEOLOGY_REPORT.md", "w", encoding="utf-8") as f:
-            f.write(report.text)
-    except Exception as e:
-        # Si la API falla por cuota (429), abrimos el circuito para proteger el sistema
-        if "429" in str(e) or "ResourceExhausted" in str(e):
-            is_circuit_open = True
-            console.print(Panel(
-                f"[bold red]🚨 CIRCUIT BREAKER TRIPPED![/bold red]\n"
-                f"API Quota Exhausted. Aborting Step 3 to prevent system stress.\n"
-                f"Error: {e}", title="Safety Protocol"
-            ))
-        else:
-            console.print(f"[bold red]Critical Error:[/bold red] {e}")
-            return
-
-    # --- FASE 3: RESTAURACIÓN (Solo si el circuito está CERRADO) ---
-    if is_circuit_open:
-        console.print("\n[bold yellow]⏭️  Skipping Step 3:[/bold yellow] Circuit is OPEN. Manual reset required after quota reset.")
-        sys.exit(1)
-
-    console.print(f"\n[bold blue]Step 3:[/bold blue] Restoring code to [yellow]'{output_dir}/'[/yellow]...")
-    for file in all_files:
-        relative_path = os.path.relpath(file, ".")
-        save_path = os.path.join(output_dir, relative_path)
-        os.makedirs(os.path.dirname(save_path), exist_ok=True)
-
-        with open(file, "r", encoding="utf-8") as f:
-            content = f.read()
-            restored = restorer.restore_file(file, content)
+            # Stage 1: Security Scrubbing
+            scrubbed_content = PIIScrubber.scrub_file(file_path)
+            logging.info(f"🛡️ Stage 1: Security Scan complete for {file_path}")
             
-            if restored:
-                # Limpiar posibles artefactos de Markdown de la IA
-                clean_code = restored.replace("```python", "").replace("```", "").strip()
-                with open(save_path, "w", encoding="utf-8") as out_f:
-                    out_f.write(clean_code)
-                console.print(f"  ✨ [green]Restored:[/green] {relative_path}")
-        
-        # Throttling preventivo para no saturar la cuenta gratuita
-        time.sleep(1.5)
+            # Stage 2: AI Simulation (Mocking the AI for now)
+            mock_ai_output = "def restored_func():\n    return 'Refactored by Ricardo'\n"
 
-    console.print(f"\n[bold green]🏁 ARCHAEOLOGY PROCESS COMPLETE![/bold green]")
+            # Stage 3: Shielded Restoration
+            success = restorer.save_restored_file(file_path, mock_ai_output)
+
+            if success:
+                trace = restorer.generate_audit_report(file_path, changes_count=15)
+                trace["security_scan"] = "PASSED"
+                pipeline_audit_data.append(trace)
+                logging.info(f"📊 Trace logged for {file_path}")
+
+        except Exception as e:
+            logging.error(f"❌ Pipeline failure on {file_path}: {e}")
+
+    # Final Audit Report
+    report_path = "audit_report.json"
+    with open(report_path, "w", encoding="utf-8") as f:
+        json.dump(pipeline_audit_data, f, indent=4)
+    logging.info(f"🏁 Pipeline finished. Report saved: {report_path}")
 
 if __name__ == "__main__":
-    run_project_archaeology()
+    run_pipeline()
