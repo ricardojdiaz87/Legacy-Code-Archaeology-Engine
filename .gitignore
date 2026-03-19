@@ -1,7 +1,8 @@
 ﻿.env
-venv/
 __pycache__/
-.vscode/
-temp_repos/
-*.db
-*.log
+*.pyc
+venv/
+.venv/
+restored_project/
+ARCHAEOLOGY_REPORT.md
+ARCHAEOLOGY_MAP.mm.md
